@@ -1,0 +1,2 @@
+factor,key,value,seed,return_code,best_epoch,best_ndcg10,best_ndcg20,best_pair_acc,last_epoch,last_train_loss,run_dir,config_path
+stage_e_inbatch_area,train.seed,42,42,0,10,0.643327,0.66485,0.670599,15,0.546313,outputs/ablation/ablation_20260321_024231/runs/stage_e_inbatch_area/value_42/seed_42,outputs/ablation/ablation_20260321_024231/configs/stage_e_inbatch_area__train.seed=42__seed=42.yaml

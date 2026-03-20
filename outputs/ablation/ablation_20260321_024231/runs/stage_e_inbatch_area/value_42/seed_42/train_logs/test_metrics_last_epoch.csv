@@ -1,0 +1,2 @@
+epoch,lr,train_loss,val_pairwise_acc,val_ndcg@10,val_ndcg@20,test_pairwise_acc,test_ndcg@10,test_ndcg@20
+15,0.00025,0.546313,0.68129,0.616651,0.651036,0.662165,0.721006,0.7316
