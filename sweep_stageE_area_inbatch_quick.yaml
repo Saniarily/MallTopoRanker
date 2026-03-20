@@ -1,0 +1,31 @@
+# Stage E: area baseline buckets + in-batch pairwise loss
+# Run with:
+# python -m src.run_ablation --base-config ./config.yaml --sweep-config ./sweep_stageE_area_inbatch_quick.yaml --train-module src.train_ranker_inbatch --output-root ./outputs/ablation
+
+seeds: [42]
+
+shared_overrides:
+  train.pair_bucket_mode: area
+  train.use_bucket_query: false
+  train.epochs: 20
+  train.batch_size_pairs: 64
+  train.lr: 0.001
+  train.weight_decay: 0.001
+
+  # kept for compatibility, not used by in-batch training logic
+  train.pairs_per_bucket: 200
+
+  val_eval.max_val_pair_batches: 30
+  val_eval.max_queries_per_bucket: 12
+  val_eval.max_candidates_per_query: 250
+  val_eval.seed: 165
+
+  test_eval.max_test_pair_batches: 30
+  test_eval.max_queries_per_bucket: 12
+  test_eval.max_candidates_per_query: 250
+  test_eval.seed: 265
+
+factors:
+  - name: stage_e_inbatch_area
+    key: train.seed
+    values: [42]

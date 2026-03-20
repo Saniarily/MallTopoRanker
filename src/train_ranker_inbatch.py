@@ -15,7 +15,7 @@ from .utils_seed import set_seed
 from .utils_bucket import make_bucket_id, area_bin, fit_query_bin_edges, make_multidim_profile_bucket_id
 from .utils_scaler import DualScaler
 from .utils_graph_io import build_graph_cache
-from .dataset_pairs import sample_pairs_within_bucket, compute_bucket_query_map, PairwiseRankDataset
+from .dataset_pairs import compute_bucket_query_map, PointSample, PointwiseRankDataset
 from .model_ranker import GraphMatchRanker
 
 from torch_geometric.data import Batch
@@ -43,26 +43,47 @@ def _load_graph_pt_cached(graph_cache_dir: str, sample_id: str):
     return torch.load(p, weights_only=False)
 
 
-def collate_fn(batch, graph_cache_dir: str):
+def collate_fn_pointwise(batch, graph_cache_dir: str):
     q = torch.stack([b["q"] for b in batch], dim=0)
-    m_pos = torch.stack([b["m_pos"] for b in batch], dim=0)
-    m_neg = torch.stack([b["m_neg"] for b in batch], dim=0)
+    m = torch.stack([b["m"] for b in batch], dim=0)
+    y = torch.stack([b["y"] for b in batch], dim=0)
+    bucket_ids = [str(b["bucket_id"]) for b in batch]
 
-    sids_pos = [b["sid_pos"] for b in batch]
-    sids_neg = [b["sid_neg"] for b in batch]
+    sids = [b["sid"] for b in batch]
+    g_list = [_load_graph_pt(graph_cache_dir, sid) for sid in sids]
+    g = Batch.from_data_list(g_list)
 
-    gpos_list = [_load_graph_pt(graph_cache_dir, sid) for sid in sids_pos]
-    gneg_list = [_load_graph_pt(graph_cache_dir, sid) for sid in sids_neg]
-
-    gpos = Batch.from_data_list(gpos_list)
-    gneg = Batch.from_data_list(gneg_list)
-
-    return q, m_pos, m_neg, gpos, gneg
+    return q, m, g, y, bucket_ids
 
 
-def pairwise_logistic_loss(s_pos, s_neg):
-    # log(1 + exp(-(s_pos - s_neg)))
-    return torch.nn.functional.softplus(-(s_pos - s_neg)).mean()
+def _bucket_ids_to_tensor(bucket_ids, device: torch.device) -> torch.Tensor:
+    mapping = {}
+    out = []
+    for b in bucket_ids:
+        if b not in mapping:
+            mapping[b] = len(mapping)
+        out.append(mapping[b])
+    return torch.tensor(out, dtype=torch.long, device=device)
+
+
+def inbatch_pairwise_logistic_loss(scores: torch.Tensor, labels: torch.Tensor, bucket_ids: list):
+    """
+    Pairwise logistic loss built inside a pointwise batch.
+    Only compare samples from the same bucket and with different labels.
+    """
+    bucket_idx = _bucket_ids_to_tensor(bucket_ids, device=scores.device)
+    same_bucket = bucket_idx.unsqueeze(1).eq(bucket_idx.unsqueeze(0))
+
+    score_diff = scores.unsqueeze(1) - scores.unsqueeze(0)
+    label_diff = labels.unsqueeze(1) - labels.unsqueeze(0)
+
+    valid_pairs = (label_diff > 0) & same_bucket
+    num_pairs = int(valid_pairs.sum().item())
+    if num_pairs == 0:
+        return None, 0
+
+    loss = torch.nn.functional.softplus(-score_diff[valid_pairs]).mean()
+    return loss, num_pairs
 
 
 def split_by_mall_id(df: pd.DataFrame, mall_col: str, seed: int, test_ratio: float, val_ratio: float):
@@ -135,29 +156,36 @@ def _batch_score_candidates(model, device, scaler, graph_cache_dir: str,
     return np.concatenate(scores, axis=0)
 
 
-def evaluate_val_pairwise_accuracy(model, device, val_loader, max_batches: int = 50):
+def evaluate_inbatch_pairwise_accuracy(model, device, data_loader, max_batches: int = 50):
     """
-    在 val pairwise 对上评估：score_pos > score_neg 的比例。
-    为控制耗时，默认最多评估 max_batches 个 batch。
+    Evaluate pairwise accuracy from pointwise batches (same-bucket comparisons only).
     """
     model.eval()
     correct = 0
     total = 0
     with torch.no_grad():
-        for bi, (q, m_pos, m_neg, gpos, gneg) in enumerate(val_loader):
+        for bi, (q, m, g, y, bucket_ids) in enumerate(data_loader):
             if bi >= max_batches:
                 break
             q = q.to(device)
-            m_pos = m_pos.to(device)
-            m_neg = m_neg.to(device)
-            gpos = gpos.to(device)
-            gneg = gneg.to(device)
+            m = m.to(device)
+            g = g.to(device)
+            y = y.to(device)
 
-            s_pos, _, _ = model(q, m_pos, gpos.x, gpos.edge_index, gpos.batch)
-            s_neg, _, _ = model(q, m_neg, gneg.x, gneg.edge_index, gneg.batch)
+            s, _, _ = model(q, m, g.x, g.edge_index, g.batch)
 
-            correct += int((s_pos > s_neg).sum().item())
-            total += int(s_pos.shape[0])
+            bucket_idx = _bucket_ids_to_tensor(bucket_ids, device=device)
+            same_bucket = bucket_idx.unsqueeze(1).eq(bucket_idx.unsqueeze(0))
+
+            score_diff = s.unsqueeze(1) - s.unsqueeze(0)
+            label_diff = y.unsqueeze(1) - y.unsqueeze(0)
+
+            valid_pairs = (label_diff != 0) & same_bucket
+            if valid_pairs.any():
+                pred_order = score_diff[valid_pairs] > 0
+                true_order = label_diff[valid_pairs] > 0
+                correct += int((pred_order == true_order).sum().item())
+                total += int(valid_pairs.sum().item())
     return float(correct / total) if total > 0 else 0.0
 
 
@@ -291,12 +319,13 @@ def main(config_path: str = "./config.yaml"):
     ensure_dir(str(Path(cfg["cache"]["scaler_path"]).parent))
     scaler.save(cfg["cache"]["scaler_path"])
 
-    # Choose pair-sampling bucket strategy
+    # Keep area bucket mode for this experiment.
     pair_bucket_mode = str(cfg.get("train", {}).get("pair_bucket_mode", "area")).lower()
     city_col = cfg["features"]["city_cluster_col"]
 
     train_df_reset = train_df.reset_index(drop=True)
     val_df_reset = val_df.reset_index(drop=True)
+    test_df_reset = test_df.reset_index(drop=True)
 
     if pair_bucket_mode == "multi_query":
         query_bin_specs = cfg.get("bucket", {}).get("query_bin_specs", {})
@@ -306,9 +335,11 @@ def main(config_path: str = "./config.yaml"):
         edge_map = fit_query_bin_edges(train_df_reset, query_bin_specs)
         train_df_reset["pair_bucket_id"] = make_multidim_profile_bucket_id(train_df_reset, city_col, edge_map)
         val_df_reset["pair_bucket_id"] = make_multidim_profile_bucket_id(val_df_reset, city_col, edge_map)
+        test_df_reset["pair_bucket_id"] = make_multidim_profile_bucket_id(test_df_reset, city_col, edge_map)
     else:
         train_df_reset["pair_bucket_id"] = train_df_reset["bucket_id"]
         val_df_reset["pair_bucket_id"] = val_df_reset["bucket_id"]
+        test_df_reset["pair_bucket_id"] = test_df_reset["bucket_id"]
 
     # standardized arrays for pair sampling
     Q_train = scaler.transform_q(Q_train_raw)
@@ -319,6 +350,10 @@ def main(config_path: str = "./config.yaml"):
     M_val = scaler.transform_m(val_df[m_cols].fillna(0).astype(float).values)
     y_val = val_df[label_col].fillna(0).astype(float).values
 
+    Q_test = scaler.transform_q(test_df[q_cols].fillna(0).astype(float).values)
+    M_test = scaler.transform_m(test_df[m_cols].fillna(0).astype(float).values)
+    y_test = test_df[label_col].fillna(0).astype(float).values
+
     # ---- Query strategy for pair sampling ----
     # use_bucket_query=True: use one representative query per bucket (recommended).
     # use_bucket_query=False: fallback to legacy behavior (query from positive sample).
@@ -328,54 +363,56 @@ def main(config_path: str = "./config.yaml"):
     # This ensures training distribution matches inference (external query vs. samples)
     bucket_query_map_train = compute_bucket_query_map(train_df_reset, "pair_bucket_id", Q_train) if use_bucket_query else None
     bucket_query_map_val = compute_bucket_query_map(val_df_reset, "pair_bucket_id", Q_val) if use_bucket_query else None
+    bucket_query_map_test = compute_bucket_query_map(test_df_reset, "pair_bucket_id", Q_test) if use_bucket_query else None
 
-    # sample pairwise train/val
-    print(f"[PairSampling] start building pairs with bucket mode='{pair_bucket_mode}'")
-    pairs_train = sample_pairs_within_bucket(
-        df=train_df_reset,
-        bucket_col="pair_bucket_id",
-        id_col=id_col,
-        q_mat=Q_train,
-        m_mat=M_train,
-        y=y_train,
-        bucket_query_map=bucket_query_map_train,
-        pairs_per_bucket=cfg["train"].get("pairs_per_bucket", 2000),
-        seed=pair_train_seed,
-        enable_hard_negatives=cfg["train"].get("enable_hard_negatives", False),
-        hard_negative_ratio=cfg["train"].get("hard_negative_ratio", 0.3)
-    )
-    pairs_val = sample_pairs_within_bucket(
-        df=val_df_reset,
-        bucket_col="pair_bucket_id",
-        id_col=id_col,
-        q_mat=Q_val,
-        m_mat=M_val,
-        y=y_val,
-        bucket_query_map=bucket_query_map_val,
-        pairs_per_bucket=max(500, int(cfg["train"].get("pairs_per_bucket", 2000) * 0.3)),
-        seed=pair_val_seed,
-        enable_hard_negatives=False
-    )
-    print(f"[PairSampling] done: train_pairs={len(pairs_train)} val_pairs={len(pairs_val)}")
+    def _build_point_samples(df_reset, q_mat, m_mat, y_vec, bucket_query_map):
+        points = []
+        for i in range(len(df_reset)):
+            b = str(df_reset.loc[i, "pair_bucket_id"])
+            if bucket_query_map is not None and b in bucket_query_map:
+                q_use = bucket_query_map[b]
+            else:
+                q_use = q_mat[i]
+            points.append(PointSample(
+                q=q_use,
+                m=m_mat[i],
+                sid=str(df_reset.loc[i, id_col]),
+                y=float(y_vec[i]),
+                bucket_id=b,
+            ))
+        return points
 
-    dataset_train = PairwiseRankDataset(pairs_train, cfg["cache"]["graph_cache_dir"])
-    dataset_val = PairwiseRankDataset(pairs_val, cfg["cache"]["graph_cache_dir"])
+    print(f"[PointSampling] building pointwise datasets with bucket mode='{pair_bucket_mode}'")
+    points_train = _build_point_samples(train_df_reset, Q_train, M_train, y_train, bucket_query_map_train)
+    points_val = _build_point_samples(val_df_reset, Q_val, M_val, y_val, bucket_query_map_val)
+    points_test = _build_point_samples(test_df_reset, Q_test, M_test, y_test, bucket_query_map_test)
+
+    dataset_train = PointwiseRankDataset(points_train, cfg["cache"]["graph_cache_dir"])
+    dataset_val = PointwiseRankDataset(points_val, cfg["cache"]["graph_cache_dir"])
+    dataset_test = PointwiseRankDataset(points_test, cfg["cache"]["graph_cache_dir"])
 
     loader_train = DataLoader(
         dataset_train,
         batch_size=cfg["train"]["batch_size_pairs"],
         shuffle=True,
         num_workers=0,
-        collate_fn=lambda b: collate_fn(b, cfg["cache"]["graph_cache_dir"])
+        collate_fn=lambda b: collate_fn_pointwise(b, cfg["cache"]["graph_cache_dir"])
     )
     loader_val = DataLoader(
         dataset_val,
         batch_size=cfg["train"]["batch_size_pairs"],
         shuffle=False,
         num_workers=0,
-        collate_fn=lambda b: collate_fn(b, cfg["cache"]["graph_cache_dir"])
+        collate_fn=lambda b: collate_fn_pointwise(b, cfg["cache"]["graph_cache_dir"])
     )
-    print(f"[Loader] train_batches={len(loader_train)} val_batches={len(loader_val)}")
+    loader_test = DataLoader(
+        dataset_test,
+        batch_size=cfg["train"]["batch_size_pairs"],
+        shuffle=False,
+        num_workers=0,
+        collate_fn=lambda b: collate_fn_pointwise(b, cfg["cache"]["graph_cache_dir"])
+    )
+    print(f"[Loader] train_batches={len(loader_train)} val_batches={len(loader_val)} test_batches={len(loader_test)}")
 
     device = _select_device()
 
@@ -443,27 +480,32 @@ def main(config_path: str = "./config.yaml"):
     best_train_loss = 1e9
     best_val_ndcg10 = -1.0
 
+    test_eval_cfg = cfg.get("test_eval", {})
+    test_pair_batches = int(test_eval_cfg.get("max_test_pair_batches", 30))
+    test_queries_per_bucket = int(test_eval_cfg.get("max_queries_per_bucket", 12))
+    test_candidates_per_query = int(test_eval_cfg.get("max_candidates_per_query", 300))
+    test_eval_seed = int(test_eval_cfg.get("seed", split_seed + 321))
+
     # write header
     with open(log_path, "w", encoding="utf-8") as f:
-        f.write("epoch,lr,train_loss,val_pairwise_acc,val_ndcg@10,val_ndcg@20\n")
+        f.write("epoch,lr,train_loss,val_pairwise_acc,val_ndcg@10,val_ndcg@20,test_pairwise_acc,test_ndcg@10,test_ndcg@20\n")
 
     for epoch in range(1, cfg["train"]["epochs"] + 1):
         model.train()
         losses = []
         pbar = tqdm(loader_train, desc=f"Epoch {epoch}/{cfg['train']['epochs']}")
 
-        for q, m_pos, m_neg, gpos, gneg in pbar:
+        for q, m, g, y, bucket_ids in pbar:
             q = q.to(device)
-            m_pos = m_pos.to(device)
-            m_neg = m_neg.to(device)
+            m = m.to(device)
+            y = y.to(device)
+            g = g.to(device)
 
-            gpos = gpos.to(device)
-            gneg = gneg.to(device)
+            s, _, _ = model(q, m, g.x, g.edge_index, g.batch)
 
-            s_pos, _, _ = model(q, m_pos, gpos.x, gpos.edge_index, gpos.batch)
-            s_neg, _, _ = model(q, m_neg, gneg.x, gneg.edge_index, gneg.batch)
-
-            loss = pairwise_logistic_loss(s_pos, s_neg)
+            loss, num_pairs = inbatch_pairwise_logistic_loss(s, y, bucket_ids)
+            if loss is None:
+                continue
 
             optim.zero_grad()
             loss.backward()
@@ -476,7 +518,7 @@ def main(config_path: str = "./config.yaml"):
         train_loss = float(np.mean(losses))
 
         # ---- validation metrics per epoch ----
-        val_pair_acc = evaluate_val_pairwise_accuracy(model, device, loader_val, max_batches=val_pair_batches)
+        val_pair_acc = evaluate_inbatch_pairwise_accuracy(model, device, loader_val, max_batches=val_pair_batches)
 
         ndcg_seed = cfg["train"]["seed"] + epoch if val_dynamic_seed else val_eval_seed
         ndcg_dict = evaluate_val_ndcg(
@@ -497,15 +539,43 @@ def main(config_path: str = "./config.yaml"):
         )
         val_ndcg10 = float(ndcg_dict.get("ndcg@10", 0.0))
         val_ndcg20 = float(ndcg_dict.get("ndcg@20", 0.0))
+
+        test_pair_acc = evaluate_inbatch_pairwise_accuracy(model, device, loader_test, max_batches=test_pair_batches)
+        test_ndcg_dict = evaluate_val_ndcg(
+            model=model,
+            device=device,
+            scaler=scaler,
+            graph_cache_dir=cfg["cache"]["graph_cache_dir"],
+            val_df=test_df,
+            q_cols=q_cols,
+            m_cols=m_cols,
+            bucket_col="bucket_id",
+            id_col=id_col,
+            label_col=label_col,
+            topk_list=(10, 20),
+            max_queries_per_bucket=test_queries_per_bucket,
+            max_candidates_per_query=test_candidates_per_query,
+            seed=test_eval_seed
+        )
+        test_ndcg10 = float(test_ndcg_dict.get("ndcg@10", 0.0))
+        test_ndcg20 = float(test_ndcg_dict.get("ndcg@20", 0.0))
+
         scheduler.step(val_ndcg10)
 
         current_lr = float(optim.param_groups[0]["lr"])
 
-        print(f"Epoch {epoch}: lr={current_lr:.6g} | train_loss={train_loss:.4f} | val_pair_acc={val_pair_acc:.4f} | val_ndcg@10={val_ndcg10:.4f} val_ndcg@20={val_ndcg20:.4f}")
+        print(
+            f"Epoch {epoch}: lr={current_lr:.6g} | train_loss={train_loss:.4f} "
+            f"| val_pair_acc={val_pair_acc:.4f} | val_ndcg@10={val_ndcg10:.4f} val_ndcg@20={val_ndcg20:.4f} "
+            f"| test_pair_acc={test_pair_acc:.4f} | test_ndcg@10={test_ndcg10:.4f} test_ndcg@20={test_ndcg20:.4f}"
+        )
 
         # write log
         with open(log_path, "a", encoding="utf-8") as f:
-            f.write(f"{epoch},{current_lr:.8f},{train_loss:.6f},{val_pair_acc:.6f},{val_ndcg10:.6f},{val_ndcg20:.6f}\n")
+            f.write(
+                f"{epoch},{current_lr:.8f},{train_loss:.6f},{val_pair_acc:.6f},{val_ndcg10:.6f},{val_ndcg20:.6f},"
+                f"{test_pair_acc:.6f},{test_ndcg10:.6f},{test_ndcg20:.6f}\n"
+            )
 
         # checkpoint by train loss (兼容你原有逻辑)
         if train_loss < best_train_loss:
@@ -516,7 +586,15 @@ def main(config_path: str = "./config.yaml"):
         # checkpoint by val ndcg@10（推荐论文用这个）
         if val_ndcg10 > best_val_ndcg10 + early_stop_min_delta:
             best_val_ndcg10 = val_ndcg10
-            checkpoint_data = {"model": model.state_dict(), "cfg": cfg, "epoch": epoch, "val_ndcg@10": best_val_ndcg10}
+            checkpoint_data = {
+                "model": model.state_dict(),
+                "cfg": cfg,
+                "epoch": epoch,
+                "val_ndcg@10": best_val_ndcg10,
+                "test_ndcg@10": test_ndcg10,
+                "test_ndcg@20": test_ndcg20,
+                "test_pairwise_acc": test_pair_acc,
+            }
             torch.save(checkpoint_data, os.path.join(out_ckpt_dir, "best_by_valndcg10.pt"))
             # Also save as latest.pt for easy inference
             torch.save(checkpoint_data, os.path.join(out_ckpt_dir, "latest.pt"))
@@ -528,6 +606,12 @@ def main(config_path: str = "./config.yaml"):
         if no_improve_epochs >= early_stop_patience:
             print(f"[EarlyStopping] no val_ndcg@10 improvement for {no_improve_epochs} epochs. Stop at epoch {epoch}.")
             break
+
+    summary_path = log_dir / "test_metrics_last_epoch.csv"
+    if log_path.exists():
+        em = pd.read_csv(log_path)
+        if len(em) > 0:
+            em.tail(1).to_csv(summary_path, index=False)
 
     print(f"[Done] Logs saved to {log_path}")
     print("[Done] Run: python -m src.plot_paper_figures  (to generate curves)")
