@@ -1,0 +1,13 @@
+factor,key,value,n_seeds,n_success,success_rate,mean_best_ndcg10,std_best_ndcg10,mean_best_ndcg20,std_best_ndcg20,mean_best_pair_acc,std_best_pair_acc,mean_last_train_loss,std_last_train_loss,mean_last_epoch
+d_model,model.d_model,40,3,3,1,0.7300 ,0.0695 ,0.7648 ,0.0809 ,0.6206 ,0.0209 ,0.6302 ,0.0270 ,10.3333 
+d_model,model.d_model,32,3,3,1,0.7299 ,0.0591 ,0.7554 ,0.0687 ,0.6291 ,0.0216 ,0.5901 ,0.0210 ,14.6667 
+d_model,model.d_model,24,3,3,1,0.7252 ,0.0660 ,0.7516 ,0.0675 ,0.6162 ,0.0158 ,0.6221 ,0.0219 ,12.6667 
+dropout_floor,regularization.min_dropout,0.25,3,3,1,0.7232 ,0.0717 ,0.7604 ,0.0806 ,0.6187 ,0.0060 ,0.6379 ,0.0207 ,9.3333 
+dropout_floor,regularization.min_dropout,0.3,3,3,1,0.7179 ,0.0475 ,0.7478 ,0.0694 ,0.6166 ,0.0184 ,0.6356 ,0.0260 ,12.6667 
+dropout_floor,regularization.min_dropout,0.2,3,3,1,0.7172 ,0.0880 ,0.7536 ,0.0884 ,0.6096 ,0.0127 ,0.6453 ,0.0137 ,9.6667 
+gnn_layers,model.gnn_layers,3,3,3,1,0.7268 ,0.0667 ,0.7631 ,0.0793 ,0.6261 ,0.0192 ,0.6385 ,0.0170 ,9.3333 
+gnn_layers,model.gnn_layers,2,3,3,1,0.7231 ,0.0712 ,0.7545 ,0.0901 ,0.6438 ,0.0262 ,0.5948 ,0.0323 ,14.0000 
+gnn_layers,model.gnn_layers,1,3,3,1,0.7151 ,0.0805 ,0.7442 ,0.0877 ,0.6154 ,0.0109 ,0.6195 ,0.0228 ,11.0000 
+weight_decay_floor,regularization.min_weight_decay,0.0005,3,3,1,0.7513 ,0.0485 ,0.7785 ,0.0701 ,0.5989 ,0.0053 ,0.6135 ,0.0348 ,16.3333 
+weight_decay_floor,regularization.min_weight_decay,0.0008,3,3,1,0.7349 ,0.0775 ,0.7602 ,0.0911 ,0.5929 ,0.0133 ,0.6246 ,0.0402 ,11.6667 
+weight_decay_floor,regularization.min_weight_decay,0.0003,3,3,1,0.7203 ,0.0779 ,0.7477 ,0.0946 ,0.5924 ,0.0067 ,0.6357 ,0.0143 ,10.6667 

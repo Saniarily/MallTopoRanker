@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Case_1_三线竞品少_中面积",
+    "city_cluster": 3,
+    "query_features": {
+      "people": 200.0,
+      "GDP_2023": 5000.0,
+      "PCDI_2023": 30000.0,
+      "TP_2023": 1000.0,
+      "mall_area_count": 10.0,
+      "nearest_distance_km": 5.0,
+      "count_1km": 1.0,
+      "count_2km": 3.0,
+      "total_area": 300000.0,
+      "Tx": 25.0
+    }
+  }
+]

@@ -1,0 +1,7 @@
+factor,key,value,seed,return_code,best_epoch,best_ndcg10,best_ndcg20,best_pair_acc,last_epoch,last_train_loss,run_dir,config_path
+d_model,model.d_model,32,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_150327/runs/d_model/value_32/seed_42,outputs/ablation/ablation_20260318_150327/configs/d_model__model.d_model=32__seed=42.yaml
+d_model,model.d_model,32,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_150327/runs/d_model/value_32/seed_43,outputs/ablation/ablation_20260318_150327/configs/d_model__model.d_model=32__seed=43.yaml
+d_model,model.d_model,48,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_150327/runs/d_model/value_48/seed_42,outputs/ablation/ablation_20260318_150327/configs/d_model__model.d_model=48__seed=42.yaml
+d_model,model.d_model,48,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_150327/runs/d_model/value_48/seed_43,outputs/ablation/ablation_20260318_150327/configs/d_model__model.d_model=48__seed=43.yaml
+d_model,model.d_model,64,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_150327/runs/d_model/value_64/seed_42,outputs/ablation/ablation_20260318_150327/configs/d_model__model.d_model=64__seed=42.yaml
+d_model,model.d_model,64,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_150327/runs/d_model/value_64/seed_43,outputs/ablation/ablation_20260318_150327/configs/d_model__model.d_model=64__seed=43.yaml

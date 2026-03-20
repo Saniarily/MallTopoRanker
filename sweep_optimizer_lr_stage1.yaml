@@ -1,0 +1,102 @@
+# Stage-1 coarse screening: fixed best-known model range + optimizer/lr grid.
+# Goal: quickly identify promising optimizer-lr zones with one seed.
+
+seeds: [43]
+
+shared_overrides:
+  model.d_model: 40
+  model.gnn_layers: 3
+  regularization.min_dropout: 0.25
+  regularization.min_weight_decay: 0.0005
+
+  train.epochs: 20
+  train.pairs_per_bucket: 1800
+
+  val_eval.max_val_pair_batches: 60
+  val_eval.max_queries_per_bucket: 20
+  val_eval.max_candidates_per_query: 300
+  val_eval.dynamic_seed: false
+  val_eval.seed: 43001
+
+  early_stopping.patience: 5
+  early_stopping.min_delta: 0.0003
+  scheduler.patience: 2
+  scheduler.factor: 0.5
+
+factors:
+  - name: optimizer_lr
+    grid:
+      - label: adamw_lr1e-4
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.0001
+      - label: adamw_lr2e-4
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.0002
+      - label: adamw_lr5e-4
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.0005
+      - label: adamw_lr8e-4
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.0008
+      - label: adamw_lr1e-3
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.001
+      - label: adamw_lr2e-3
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.002
+
+      - label: radam_lr1e-4
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.0001
+      - label: radam_lr2e-4
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.0002
+      - label: radam_lr5e-4
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.0005
+      - label: radam_lr8e-4
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.0008
+      - label: radam_lr1e-3
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.001
+      - label: radam_lr2e-3
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.002
+
+      - label: adam_lr1e-4
+        overrides:
+          train.optimizer: adam
+          train.lr: 0.0001
+      - label: adam_lr2e-4
+        overrides:
+          train.optimizer: adam
+          train.lr: 0.0002
+      - label: adam_lr5e-4
+        overrides:
+          train.optimizer: adam
+          train.lr: 0.0005
+      - label: adam_lr8e-4
+        overrides:
+          train.optimizer: adam
+          train.lr: 0.0008
+      - label: adam_lr1e-3
+        overrides:
+          train.optimizer: adam
+          train.lr: 0.001
+      - label: adam_lr2e-3
+        overrides:
+          train.optimizer: adam
+          train.lr: 0.002

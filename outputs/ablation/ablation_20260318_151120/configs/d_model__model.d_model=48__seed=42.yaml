@@ -1,0 +1,65 @@
+data:
+  main_table_csv: /Users/saniarily/Desktop/Coding_Mac/Mall_Topo/DATASET_3+6类城市_with_rkn_ratios_and_topo_metrics.csv
+  graph_dir: /Users/saniarily/Desktop/Coding_Mac/Mall_Topo/Graph_Data/total_graph_data/total_graph_data(6005个地上层)
+  graph_suffix_edge: _M_simplified.csv
+  graph_suffix_node: _M_simplified_node_attributes.csv
+cache:
+  graph_cache_dir: ./cache/graphs_pt
+  scaler_path: outputs/ablation/ablation_20260318_151120/runs/d_model/value_48/seed_42/cache/scaler.pkl
+features:
+  query_cols:
+  - people
+  - GDP_2023
+  - PCDI_2023
+  - TP_2023
+  - mall_area_count
+  - nearest_distance_km
+  - count_1km
+  - count_2km
+  - total_area
+  - Tx
+  metric_cols:
+  - L1_density
+  - L2_diameter
+  - L2_complexity
+  - L2_integration
+  label_col: total_score
+  id_col: floor_id
+  city_cluster_col: city_cluster
+  total_area_col: total_area
+bucket:
+  area_thresholds:
+  - 200000
+  - 450000
+train:
+  seed: 42
+  test_ratio: 0.1
+  val_ratio: 0.1
+  epochs: 12
+  batch_size_pairs: 64
+  pairs_per_bucket: 1200
+  hard_negative_k: 0
+  lr: 0.001
+  weight_decay: 0.0001
+  reg_loss_weight: 0.05
+model:
+  d_model: 48
+  gnn_layers: 3
+  gnn_hidden: 64
+  cross_heads: 4
+  dropout: 0.1
+infer:
+  topk: 10
+val_eval:
+  max_val_pair_batches: 30
+  max_queries_per_bucket: 10
+  max_candidates_per_query: 200
+early_stopping:
+  patience: 3
+  min_delta: 0.0005
+scheduler:
+  patience: 1
+  factor: 0.5
+outputs:
+  checkpoint_dir: outputs/ablation/ablation_20260318_151120/runs/d_model/value_48/seed_42/checkpoints
+  train_log_dir: outputs/ablation/ablation_20260318_151120/runs/d_model/value_48/seed_42/train_logs

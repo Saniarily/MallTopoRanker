@@ -1,0 +1,55 @@
+# Stage D (Quick): baseline area-bucket sampling vs multi-dimensional query-profile sampling
+# Baseline kept as use_bucket_query=False.
+# Scheme A: only change pair bucketing strategy, keep other best params fixed.
+
+seeds: [42, 43, 44]
+
+shared_overrides:
+  train.optimizer: adamw
+  train.lr: 0.0012
+  train.weight_decay: 0.0005
+  train.batch_size_pairs: 32
+  train.epochs: 50
+  train.pairs_per_bucket: 2000
+  train.use_bucket_query: false
+  train.enable_hard_negatives: false
+
+  # Fixed data protocol
+  train.split_seed: 42
+  train.pair_train_seed: 43
+  train.pair_val_seed: 44
+
+  model.d_model: 40
+  model.gnn_layers: 3
+  model.cross_heads: 4
+  model.dropout: 0.25
+
+  regularization.min_dropout: 0.22
+  regularization.min_weight_decay: 0.0005
+
+  scheduler.factor: 0.4
+  scheduler.patience: 3
+  scheduler.min_lr: 1.0e-6
+
+  early_stopping.patience: 8
+  early_stopping.min_delta: 0.0002
+
+  val_eval.dynamic_seed: false
+  val_eval.seed: 165
+  val_eval.max_val_pair_batches: 50
+  val_eval.max_queries_per_bucket: 20
+  val_eval.max_candidates_per_query: 300
+
+  # Used only when train.pair_bucket_mode=multi_query
+  bucket.query_bin_specs:
+    total_area:
+      n_bins: 3
+    Tx:
+      n_bins: 3
+    people:
+      n_bins: 3
+
+factors:
+  - name: stage_d_pair_bucket_mode_compare
+    key: train.pair_bucket_mode
+    values: [area, multi_query]

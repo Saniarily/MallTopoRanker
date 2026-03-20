@@ -1,0 +1,10 @@
+factor,key,value,seed,return_code,best_epoch,best_ndcg10,best_ndcg20,best_pair_acc,last_epoch,last_train_loss,run_dir,config_path
+d_model,model.d_model,24,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_24/seed_42,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=24__seed=42.yaml
+d_model,model.d_model,24,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_24/seed_43,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=24__seed=43.yaml
+d_model,model.d_model,24,44,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_24/seed_44,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=24__seed=44.yaml
+d_model,model.d_model,32,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_32/seed_42,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=32__seed=42.yaml
+d_model,model.d_model,32,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_32/seed_43,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=32__seed=43.yaml
+d_model,model.d_model,32,44,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_32/seed_44,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=32__seed=44.yaml
+d_model,model.d_model,40,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_40/seed_42,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=40__seed=42.yaml
+d_model,model.d_model,40,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_40/seed_43,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=40__seed=43.yaml
+d_model,model.d_model,40,44,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/d_model/value_40/seed_44,outputs/ablation/ablation_20260318_161840/configs/d_model__model.d_model=40__seed=44.yaml

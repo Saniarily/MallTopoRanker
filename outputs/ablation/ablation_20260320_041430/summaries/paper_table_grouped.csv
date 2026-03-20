@@ -1,0 +1,3 @@
+factor,key,value,n_seeds,n_success,success_rate,mean_best_ndcg10,std_best_ndcg10,mean_best_ndcg20,std_best_ndcg20,mean_best_pair_acc,std_best_pair_acc,mean_last_train_loss,std_last_train_loss,mean_last_epoch
+stage_c_query_strategy_compare,train.use_bucket_query,FALSE,3,3,1,0.6753560000000001,0.008904975519337494,0.691176,0.01405630378157783,0.6060416666666667,0.010974639325888314,0.6163023333333333,0.021842386530169566,13.333333333333334
+stage_c_query_strategy_compare,train.use_bucket_query,TRUE,3,3,1,0.668449,0.004990173443879492,0.6905506666666666,0.006821617281358815,0.599375,0.016921232963351126,0.6273946666666667,0.00671351639108249,9.666666666666666

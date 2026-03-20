@@ -1,0 +1,36 @@
+# Single-factor sweep template for controlled experiments.
+# Each run changes exactly one key from the base config.
+
+seeds: [42, 43]
+
+shared_overrides:
+  train.epochs: 20
+
+factors:
+  - name: d_model
+    key: model.d_model
+    values: [32, 48, 64]
+
+  - name: gnn_layers
+    key: model.gnn_layers
+    values: [2, 3, 4]
+
+  - name: dropout_floor
+    key: regularization.min_dropout
+    values: [0.1, 0.2, 0.3]
+
+  - name: weight_decay_floor
+    key: regularization.min_weight_decay
+    values: [0.0001, 0.001, 0.005]
+
+  - name: es_patience
+    key: early_stopping.patience
+    values: [3, 5, 8]
+
+  - name: sched_factor
+    key: scheduler.factor
+    values: [0.3, 0.5, 0.8]
+
+  - name: sched_patience
+    key: scheduler.patience
+    values: [1, 2, 3]

@@ -1,0 +1,3 @@
+factor,key,value,seed,return_code,best_epoch,best_ndcg10,best_ndcg20,best_pair_acc,last_epoch,last_train_loss,run_dir,config_path
+d_model,model.d_model,32,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_151120/runs/d_model/value_32/seed_42,outputs/ablation/ablation_20260318_151120/configs/d_model__model.d_model=32__seed=42.yaml
+d_model,model.d_model,48,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_151120/runs/d_model/value_48/seed_42,outputs/ablation/ablation_20260318_151120/configs/d_model__model.d_model=48__seed=42.yaml

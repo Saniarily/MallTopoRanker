@@ -1,0 +1,2 @@
+factor,key,value,n_seeds,n_success,success_rate,mean_best_ndcg10,std_best_ndcg10,mean_best_ndcg20,std_best_ndcg20,mean_best_pair_acc,std_best_pair_acc,mean_last_train_loss,std_last_train_loss,mean_last_epoch
+stage_c_query_strategy_compare,train.use_bucket_query,False,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0

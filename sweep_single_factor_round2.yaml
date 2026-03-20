@@ -1,0 +1,32 @@
+# Round-2 single-factor sweep (focused, publication-ready statistics).
+# Design goal: keep control-variable protocol while improving stability.
+
+seeds: [42, 43, 44]
+
+shared_overrides:
+  train.epochs: 20
+  train.pairs_per_bucket: 1800
+  val_eval.max_val_pair_batches: 60
+  val_eval.max_queries_per_bucket: 20
+  val_eval.max_candidates_per_query: 300
+  early_stopping.patience: 5
+  early_stopping.min_delta: 0.0003
+  scheduler.patience: 2
+  scheduler.factor: 0.5
+
+factors:
+  - name: d_model
+    key: model.d_model
+    values: [24, 32, 40]
+
+  - name: gnn_layers
+    key: model.gnn_layers
+    values: [1, 2, 3]
+
+  - name: dropout_floor
+    key: regularization.min_dropout
+    values: [0.2, 0.25, 0.3]
+
+  - name: weight_decay_floor
+    key: regularization.min_weight_decay
+    values: [0.0003, 0.0005, 0.0008]

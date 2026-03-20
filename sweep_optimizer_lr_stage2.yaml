@@ -1,0 +1,53 @@
+# Stage-2 confirmation: 3-seed averaging on shortlisted optimizer/lr candidates.
+# Update the candidate list according to Stage-1 top results if needed.
+
+seeds: [42, 43, 44]
+
+shared_overrides:
+  model.d_model: 40
+  model.gnn_layers: 3
+  regularization.min_dropout: 0.25
+  regularization.min_weight_decay: 0.0005
+
+  train.epochs: 22
+  train.pairs_per_bucket: 2000
+
+  val_eval.max_val_pair_batches: 80
+  val_eval.max_queries_per_bucket: 25
+  val_eval.max_candidates_per_query: 350
+  val_eval.dynamic_seed: false
+  val_eval.seed: 52001
+
+  early_stopping.patience: 6
+  early_stopping.min_delta: 0.0002
+  scheduler.patience: 2
+  scheduler.factor: 0.5
+
+factors:
+  - name: optimizer_lr_confirm
+    grid:
+      - label: adamw_lr5e-4
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.0005
+      - label: adamw_lr8e-4
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.0008
+      - label: adamw_lr1e-3
+        overrides:
+          train.optimizer: adamw
+          train.lr: 0.001
+
+      - label: radam_lr5e-4
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.0005
+      - label: radam_lr8e-4
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.0008
+      - label: radam_lr1e-3
+        overrides:
+          train.optimizer: radam
+          train.lr: 0.001

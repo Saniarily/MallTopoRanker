@@ -1,0 +1,10 @@
+factor,key,value,seed,return_code,best_epoch,best_ndcg10,best_ndcg20,best_pair_acc,last_epoch,last_train_loss,run_dir,config_path
+gnn_layers,model.gnn_layers,1,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_1/seed_42,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=1__seed=42.yaml
+gnn_layers,model.gnn_layers,1,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_1/seed_43,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=1__seed=43.yaml
+gnn_layers,model.gnn_layers,1,44,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_1/seed_44,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=1__seed=44.yaml
+gnn_layers,model.gnn_layers,2,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_2/seed_42,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=2__seed=42.yaml
+gnn_layers,model.gnn_layers,2,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_2/seed_43,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=2__seed=43.yaml
+gnn_layers,model.gnn_layers,2,44,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_2/seed_44,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=2__seed=44.yaml
+gnn_layers,model.gnn_layers,3,42,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_3/seed_42,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=3__seed=42.yaml
+gnn_layers,model.gnn_layers,3,43,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_3/seed_43,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=3__seed=43.yaml
+gnn_layers,model.gnn_layers,3,44,0,-1,0.0,0.0,0.0,-1,0.0,outputs/ablation/ablation_20260318_161840/runs/gnn_layers/value_3/seed_44,outputs/ablation/ablation_20260318_161840/configs/gnn_layers__model.gnn_layers=3__seed=44.yaml

@@ -1,0 +1,13 @@
+factor,key,value,n_seeds,n_success,success_rate,mean_best_ndcg10,std_best_ndcg10,mean_best_ndcg20,std_best_ndcg20,mean_best_pair_acc,std_best_pair_acc,mean_last_train_loss,std_last_train_loss,mean_last_epoch
+dropout_floor,regularization.min_dropout,0.22,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+dropout_floor,regularization.min_dropout,0.25,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+dropout_floor,regularization.min_dropout,0.28,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+early_stop_patience,early_stopping.patience,5,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+early_stop_patience,early_stopping.patience,6,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+early_stop_patience,early_stopping.patience,8,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+scheduler_factor,scheduler.factor,0.4,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+scheduler_factor,scheduler.factor,0.5,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+scheduler_factor,scheduler.factor,0.7,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+weight_decay_floor,regularization.min_weight_decay,0.0003,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+weight_decay_floor,regularization.min_weight_decay,0.0005,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+weight_decay_floor,regularization.min_weight_decay,0.0008,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0

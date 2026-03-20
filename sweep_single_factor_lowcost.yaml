@@ -1,0 +1,32 @@
+# Low-cost first-round single-factor sweep.
+# Goal: quickly observe trends with minimal GPU/CPU time.
+
+seeds: [42]
+
+shared_overrides:
+  train.epochs: 12
+  train.pairs_per_bucket: 1200
+  val_eval.max_val_pair_batches: 30
+  val_eval.max_queries_per_bucket: 10
+  val_eval.max_candidates_per_query: 200
+  early_stopping.patience: 3
+  early_stopping.min_delta: 0.0005
+  scheduler.patience: 1
+  scheduler.factor: 0.5
+
+factors:
+  - name: d_model
+    key: model.d_model
+    values: [32, 48]
+
+  - name: gnn_layers
+    key: model.gnn_layers
+    values: [2, 3]
+
+  - name: dropout_floor
+    key: regularization.min_dropout
+    values: [0.15, 0.25]
+
+  - name: weight_decay_floor
+    key: regularization.min_weight_decay
+    values: [0.0005, 0.001]

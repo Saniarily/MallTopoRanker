@@ -1,0 +1,5 @@
+factor,key,value,n_seeds,n_success,success_rate,mean_best_ndcg10,std_best_ndcg10,mean_best_ndcg20,std_best_ndcg20,mean_best_pair_acc,std_best_pair_acc,mean_last_train_loss,std_last_train_loss,mean_last_epoch
+lr_refine,train.lr,0.0008,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+lr_refine,train.lr,0.001,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+lr_refine,train.lr,0.0012,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0
+lr_refine,train.lr,0.0015,3,3,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0

@@ -1,0 +1,47 @@
+# Stage B: decoupled fine-tuning after Stage A winner is fixed.
+# Goal: improve generalization while avoiding variable coupling.
+# Keep optimizer/lr fixed and tune one regularization/training axis at a time.
+
+seeds: [42, 43, 44]
+
+shared_overrides:
+  train.split_seed: 42
+  train.pair_train_seed: 43
+  train.pair_val_seed: 44
+
+  model.d_model: 40
+  model.gnn_layers: 3
+
+  # Fixed from Stage A winner (update if needed)
+  train.optimizer: adamw
+  train.lr: 0.0012
+
+  train.epochs: 26
+  train.pairs_per_bucket: 2200
+
+  val_eval.max_val_pair_batches: 100
+  val_eval.max_queries_per_bucket: 30
+  val_eval.max_candidates_per_query: 400
+  val_eval.dynamic_seed: false
+  val_eval.seed: 62001
+
+  early_stopping.min_delta: 0.0002
+  scheduler.patience: 2
+  scheduler.factor: 0.5
+
+factors:
+  - name: dropout_floor
+    key: regularization.min_dropout
+    values: [0.22, 0.25, 0.28]
+
+  - name: weight_decay_floor
+    key: regularization.min_weight_decay
+    values: [0.0003, 0.0005, 0.0008]
+
+  - name: early_stop_patience
+    key: early_stopping.patience
+    values: [5, 6, 8]
+
+  - name: scheduler_factor
+    key: scheduler.factor
+    values: [0.4, 0.5, 0.7]
